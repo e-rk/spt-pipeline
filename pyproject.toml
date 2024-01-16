@@ -26,6 +26,9 @@ classifiers = [
 homepage = "https://github.com/e-rk/spt-pipeline"
 repository = "https://github.com/e-rk/spt-pipeline"
 
+[project.scripts]
+spt-run = "spt_pipeline.main:run"
+
 [tool.isort]
 profile = "black"
 
