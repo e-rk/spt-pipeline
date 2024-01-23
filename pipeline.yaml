@@ -1,0 +1,11 @@
+pipelines:
+  - action: GetFiles
+    directory: "{_source}/Data/TRACKS"
+    match: "*"
+    dir_only: True
+  - action: Foreach
+    actions:
+     - action: Track2GLTF
+       destination: "{_destination}/tracks/{_filename}/{_filename}.glb"
+     - action: GodotPostprocess
+       script: "{_destination}/pipeline/scripts/track-postprocess.gd"
