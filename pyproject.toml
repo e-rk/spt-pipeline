@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "SPT resource pipeline"
 authors = [{ name = "Rafał Kuźnia" }, { email = "rafal.kuznia@protonmail.com" }]
 readme = { file = 'README.md', content-type = 'text/markdown' }
-dependencies = ["click", "more-itertools", "dataclass-wizard"]
+dependencies = ["click", "more-itertools", "dataclass-wizard", "pyyaml"]
 license = { text = "GPL-3.0-or-later" }
 classifiers = [
     'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
