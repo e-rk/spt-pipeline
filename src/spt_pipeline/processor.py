@@ -8,21 +8,33 @@ import logging
 import os
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import AbstractContextManager, suppress
+from contextlib import AbstractContextManager, chdir, suppress
 from functools import singledispatchmethod
 from pathlib import Path
+import sys
 
-from spt_pipeline.dsl import Foreach, GetFiles, GodotPostprocess, Track2GLTF
+from spt_pipeline.dsl import (
+    Car2GLTF,
+    Foreach,
+    GetFiles,
+    GodotPostprocess,
+    GodotRun,
+    Track2GLTF,
+)
+from spt_pipeline.utils import RESOURCE_DIR, run_process
 
 logger = logging.getLogger(__name__)
 
 
 class PipelineProcessor(AbstractContextManager):
-    def __init__(self, source, destination, path=None, executor=None):
+    def __init__(self, source, destination, path=None, blender=None, godot=None, executor=None):
         self.source = source
         self.destination = destination
         self.path = path
-        self.executor = executor if executor else ThreadPoolExecutor()
+        self.blender = blender if blender else "blender"
+        self.godot = godot if godot else "godot"
+        max_workers = 1 if sys.platform == "win32" else 6
+        self.executor = executor if executor else ThreadPoolExecutor(max_workers=max_workers)
 
     def __enter__(self):
         return self
@@ -33,12 +45,16 @@ class PipelineProcessor(AbstractContextManager):
     def _with_ctx(self, action, **kwargs):
         path = kwargs.get("path", None)
         with PipelineProcessor(
-            source=self.source, destination=self.destination, path=path, executor=self.executor
+            source=self.source,
+            destination=self.destination,
+            path=path,
+            blender=self.blender,
+            executor=self.executor,
         ) as local:
             return local.run_action(action)
 
     def format(self, string) -> str:
-        filename = self.path.name if self.path else None
+        filename = self.path.name if isinstance(self.path, Path) else None
         f = {
             "_source": self.source,
             "_destination": self.destination,
@@ -52,7 +68,25 @@ class PipelineProcessor(AbstractContextManager):
 
     @staticmethod
     def spawn(args):
-        subprocess.run(args, check=True, capture_output=True)
+        try:
+            result = run_process(args)
+            stdout = result.stdout.decode("utf-8")
+            if stdout:
+                logger.debug(stdout)
+            stderr = result.stderr.decode("utf-8")
+            if stderr:
+                logger.debug(stderr)
+            return True
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Blender args: {args}")
+            logger.error("Blender failed")
+            stdout = e.stdout.decode("utf-8")
+            if stdout:
+                logger.error(stdout)
+            stderr = e.stderr.decode("utf-8")
+            if stderr:
+                logger.error(stderr)
+            return False
 
     @singledispatchmethod
     def run_action(self, action) -> str:
@@ -62,21 +96,51 @@ class PipelineProcessor(AbstractContextManager):
     def _(self, action: Track2GLTF):
         logger.debug(action)
         destination = self.format_path(action.destination)
+        logger.info(f"Converting track {self.path} into {destination}")
         with suppress(FileExistsError):
             os.makedirs(destination.parent)
-        self.spawn(
-            [
-                "blender",
-                "--background",
-                "--python",
-                "./src/resources/track2gltf.py",
-                "--",
-                "--input",
-                self.path,
-                "--output",
-                destination,
-            ]
-        )
+        args = [
+            self.blender,
+            "--background",
+            "--python",
+            RESOURCE_DIR / "track2gltf.py",
+            "--",
+            "--input",
+            self.path,
+            "--output",
+            destination,
+        ]
+        if action.night:
+            args.append("--night")
+        if action.weather:
+            args.append("--weather")
+        if self.spawn(args):
+            logger.info(f"Successfuly converted {self.path}")
+        else:
+            logger.error(f"Failed to convert {self.path}")
+
+    @run_action.register
+    def _(self, action: Car2GLTF):
+        logger.debug(action)
+        destination = self.format_path(action.destination)
+        logger.info(f"Converting car {self.path} into {destination}")
+        with suppress(FileExistsError):
+            os.makedirs(destination.parent)
+        args = [
+            self.blender,
+            "--background",
+            "--python",
+            RESOURCE_DIR / "car2gltf.py",
+            "--",
+            "--input",
+            self.path,
+            "--output",
+            destination,
+        ]
+        if self.spawn(args):
+            logger.info(f"Successfuly converted {self.path}")
+        else:
+            logger.error(f"Failed to convert {self.path}")
 
     @run_action.register
     def _(self, action: Foreach):
@@ -90,11 +154,23 @@ class PipelineProcessor(AbstractContextManager):
         logger.debug(f"{action} p={self.path}")
         match = self.format(action.match)
         directory = self.format(action.directory)
-        return list(Path(directory).glob(match))
+        files = list({p.parent for p in Path(directory).rglob(match, case_sensitive=False)})
+        if action.required and not files:
+            raise FileNotFoundError(f"No files found in {directory}")
+        elif not files:
+            logger.warning(f"No files found in {directory}")
+        return files
 
     @run_action.register
     def _(self, action: GodotPostprocess):
         logger.debug(action)
+
+    @run_action.register
+    def _(self, action: GodotRun):
+        directory = self.format(action.workdir)
+        with chdir(directory):
+            args = [self.godot] + action.args
+            run_process(args)
 
     def run_actions_int(self, actions, path):
         for action in actions:

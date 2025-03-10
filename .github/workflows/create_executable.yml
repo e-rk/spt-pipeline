@@ -1,0 +1,65 @@
+name: Build executable
+
+on:
+    push:
+        branches:
+            - "*"
+    pull_request:
+        branches: ["master"]
+
+jobs:
+    build_linux:
+        name: Build Linux
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+            - name: Prepare
+              run: pip install .
+            - name: Create Executable
+              uses: sayyid5416/pyinstaller@v1
+              with:
+                  python_ver: "3.14"
+                  spec: src/spt_pipeline/gui.py
+                  requirements: requirements.txt
+                  upload_exe_with_name: "installer_linux"
+                  options: --onefile, --name "installer_linux", --add-data src/spt_pipeline/resources:spt_pipeline/resources,
+
+    build_windows:
+        name: Build Windows
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v6
+            - name: Prepare
+              run: pip install .
+            - name: Create Executable
+              uses: sayyid5416/pyinstaller@v1
+              with:
+                  python_ver: "3.14"
+                  spec: src/spt_pipeline/gui.py
+                  requirements: requirements.txt
+                  upload_exe_with_name: "installer_windows"
+                  options: --onefile, --name "installer_windows", --add-data src/spt_pipeline/resources:spt_pipeline/resources,
+
+    release:
+        name: Publish Release
+        needs: [build_windows, build_linux]
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            # - name: Git describe
+            #   id: ghd
+            #   uses: proudust/gh-describe@v2
+            - name: Download artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: installer_windows
+            - name: Download artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: installer_linux
+            - name: Create draft release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_REPO: ${{ github.repository }}
+              run: gh release create test --draft=true --generate-notes installer_*

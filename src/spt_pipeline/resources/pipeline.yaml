@@ -1,0 +1,59 @@
+pipelines:
+    - action: GetFiles
+      directory: "{_source}/Data/TRACKS"
+      match: "*/TR.FRD"
+      dir_only: True
+      required: True
+    - action: Foreach
+      actions:
+          - action: Track2GLTF
+            destination: "{_destination}/import/tracks/{_filename}/{_filename}.glb"
+          - action: GodotPostprocess
+            script: "{_destination}/pipeline/scripts/track-postprocess.gd"
+    # - action: GetFiles
+    #   directory: "{_source}/Data/TRACKS"
+    #   match: "*"
+    #   dir_only: True
+    # - action: Foreach
+    #   actions:
+    #       - action: Track2GLTF
+    #         destination: "{_destination}/import/tracks/{_filename}/{_filename}N.glb"
+    #         night: true
+    #       - action: GodotPostprocess
+    #         script: "{_destination}/pipeline/scripts/track-postprocess.gd"
+    # - action: GetFiles
+    #   directory: "{_source}/Data/TRACKS"
+    #   match: "*"
+    #   dir_only: True
+    # - action: Foreach
+    #   actions:
+    #       - action: Track2GLTF
+    #         destination: "{_destination}/import/tracks/{_filename}/{_filename}W.glb"
+    #         weather: true
+    #       - action: GodotPostprocess
+    #         script: "{_destination}/pipeline/scripts/track-postprocess.gd"
+    # - action: GetFiles
+    #   directory: "{_source}/Data/TRACKS"
+    #   match: "*"
+    #   dir_only: True
+    # - action: Foreach
+    #   actions:
+    #       - action: Track2GLTF
+    #         destination: "{_destination}/import/tracks/{_filename}/{_filename}NW.glb"
+    #         night: true
+    #         weather: true
+    #       - action: GodotPostprocess
+    #         script: "{_destination}/pipeline/scripts/track-postprocess.gd"
+    - action: GetFiles
+      directory: "{_source}/Data/CARS"
+      match: "*/CAR.VIV"
+      dir_only: True
+      recursive: True
+      required: True
+    - action: Foreach
+      actions:
+          - action: Car2GLTF
+            destination: "{_destination}/import/cars/{_filename}/{_filename}.glb"
+    - action: GodotRun
+      workdir: "{_destination}"
+      args: ["--import"]
