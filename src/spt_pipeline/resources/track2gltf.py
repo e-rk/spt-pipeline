@@ -28,7 +28,7 @@ try:
         import_collision=True,
         import_cameras=True,
         import_ambient=True,
-        # import_audio=True,
+        import_audio=True,
         night=args.night,
         weather=args.weather,
     )
