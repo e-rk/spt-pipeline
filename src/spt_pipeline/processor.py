@@ -21,18 +21,17 @@ from spt_pipeline.dsl import (
     GodotRun,
     Track2GLTF,
 )
-from spt_pipeline.utils import RESOURCE_DIR, run_process
+from spt_pipeline.utils import RESOURCE_DIR, run_blender, run_godot
 
 logger = logging.getLogger(__name__)
 
 
 class PipelineProcessor(AbstractContextManager):
-    def __init__(self, source, destination, path=None, blender=None, godot=None, executor=None):
+    def __init__(self, source, destination, path=None, paths: dict[str, Path] = {}, executor=None):
         self.source = source
         self.destination = destination
         self.path = path
-        self.blender = blender if blender else "blender"
-        self.godot = godot if godot else "godot"
+        self.paths: dict[str, Path] = paths
         max_workers = 1 if sys.platform == "win32" else 6
         self.executor = executor if executor else ThreadPoolExecutor(max_workers=max_workers)
 
@@ -48,13 +47,13 @@ class PipelineProcessor(AbstractContextManager):
             source=self.source,
             destination=self.destination,
             path=path,
-            blender=self.blender,
+            paths=self.paths,
             executor=self.executor,
         ) as local:
             return local.run_action(action)
 
     def format(self, string) -> str:
-        filename = self.path.name if isinstance(self.path, Path) else None
+        filename = self.path.name.lower() if isinstance(self.path, Path) else None
         f = {
             "_source": self.source,
             "_destination": self.destination,
@@ -66,26 +65,11 @@ class PipelineProcessor(AbstractContextManager):
     def format_path(self, string) -> Path:
         return Path(self.format(string))
 
-    @staticmethod
-    def spawn(args):
+    def spawn_blender(self, args):
         try:
-            result = run_process(args)
-            stdout = result.stdout.decode("utf-8")
-            if stdout:
-                logger.debug(stdout)
-            stderr = result.stderr.decode("utf-8")
-            if stderr:
-                logger.debug(stderr)
+            run_blender(args, self.paths)
             return True
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Blender args: {args}")
-            logger.error("Blender failed")
-            stdout = e.stdout.decode("utf-8")
-            if stdout:
-                logger.error(stdout)
-            stderr = e.stderr.decode("utf-8")
-            if stderr:
-                logger.error(stderr)
+        except subprocess.CalledProcessError:
             return False
 
     @singledispatchmethod
@@ -100,7 +84,6 @@ class PipelineProcessor(AbstractContextManager):
         with suppress(FileExistsError):
             os.makedirs(destination.parent)
         args = [
-            self.blender,
             "--background",
             "--python",
             RESOURCE_DIR / "track2gltf.py",
@@ -114,7 +97,7 @@ class PipelineProcessor(AbstractContextManager):
             args.append("--night")
         if action.weather:
             args.append("--weather")
-        if self.spawn(args):
+        if self.spawn_blender(args):
             logger.info(f"Successfuly converted {self.path}")
         else:
             logger.error(f"Failed to convert {self.path}")
@@ -127,7 +110,6 @@ class PipelineProcessor(AbstractContextManager):
         with suppress(FileExistsError):
             os.makedirs(destination.parent)
         args = [
-            self.blender,
             "--background",
             "--python",
             RESOURCE_DIR / "car2gltf.py",
@@ -137,7 +119,7 @@ class PipelineProcessor(AbstractContextManager):
             "--output",
             destination,
         ]
-        if self.spawn(args):
+        if self.spawn_blender(args):
             logger.info(f"Successfuly converted {self.path}")
         else:
             logger.error(f"Failed to convert {self.path}")
@@ -169,8 +151,7 @@ class PipelineProcessor(AbstractContextManager):
     def _(self, action: GodotRun):
         directory = self.format(action.workdir)
         with chdir(directory):
-            args = [self.godot] + action.args
-            run_process(args)
+            run_godot(action.args, self.paths)
 
     def run_actions_int(self, actions, path):
         for action in actions:

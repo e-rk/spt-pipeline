@@ -13,7 +13,7 @@ from threading import Thread
 from tkinter import filedialog, messagebox, scrolledtext
 
 from spt_pipeline.main import main
-from spt_pipeline.utils import ADDON_URL, BLENDER_PATH, RESOURCE_DIR
+from spt_pipeline.utils import get_manifest, format_paths, RESOURCE_DIR
 
 
 class GuiLogHandler(logging.Handler):
@@ -34,7 +34,10 @@ class PathSelector:
         self.root = root
         self.root.title("Import wizard")
 
-        self.blender_exe = tk.StringVar(value=BLENDER_PATH)
+        manifest = get_manifest()
+        self.paths = format_paths(manifest)
+
+        self.blender_exe = tk.StringVar(value=str(self.paths["blender"]))
         self.game_path = tk.StringVar()
 
         self.install_blender = tk.BooleanVar(value=False)
@@ -55,7 +58,7 @@ class PathSelector:
         self.blender_entry.grid(row=0, column=1, padx=10)
 
         self.blender_browse_btn = tk.Button(
-            input_group, text="Browse...", command=lambda: self.file_dialog("blender")
+            input_group, text="Browse...", command=lambda: self.file_dialog(self.blender_exe)
         )
         self.blender_browse_btn.grid(row=0, column=2)
 
@@ -97,7 +100,7 @@ class PathSelector:
         state = "disabled" if self.install_blender.get() else "normal"
         self.blender_entry.config(state=state)
         self.blender_browse_btn.config(state=state)
-        self.blender_exe.set(BLENDER_PATH)
+        self.blender_exe.set(str(self.paths["blender"]))
         self.logger.debug(f"Install blender: {self.install_blender.get()}")
 
     def file_dialog(self, var):
@@ -119,13 +122,15 @@ class PathSelector:
 
         pipeline_path = RESOURCE_DIR / "pipeline.yaml"
         file = open(pipeline_path, "r", encoding="utf-8")
+        paths = self.paths
+        paths["blender"] = Path(self.blender_exe.get())
         self.thread = Thread(
             target=main,
             kwargs={
                 "source": Path(self.game_path.get()),
-                "blender": Path(self.blender_exe.get()),
                 "file": file,
                 "blender_install": self.install_blender.get(),
+                "paths": paths,
             },
         )
         self.thread.start()
