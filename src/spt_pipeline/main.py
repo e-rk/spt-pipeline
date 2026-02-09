@@ -60,7 +60,7 @@ def install_addon(blender: Path, addon_path: Path):
                 addon_path,
             ]
         )
-        time.sleep(10)  # Apparently needed for Blender to finish installation
+        time.sleep(3)  # Apparently needed for Blender to finish installation
         logger.info("Addon installed successfuly")
     except subprocess.CalledProcessError as e:
         logger.error("Addon installation failed")
