@@ -23,6 +23,7 @@ try:
     bpy.ops.import_scene.nfs4car(
         directory=args.input,
         import_lights=True,
+        import_audio=True,
     )
     bpy.ops.export_scene.gltf(
         filepath=args.output,
