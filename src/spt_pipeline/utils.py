@@ -4,8 +4,14 @@ import sys
 from pathlib import Path
 import json
 import logging
+from typing import Sequence, TypeVar
+import errno
 
 logger = logging.getLogger(__name__)
+
+
+T = TypeVar("T")
+Ty = TypeVar("Ty")
 
 
 RESOURCE_DIR = Path(__file__).parent / "resources"
@@ -119,3 +125,38 @@ def run_blender(args: list, paths: dict[str, Path]):
 def run_godot(args: list, paths: dict[str, Path]):
     godot_exe = paths["godot"]
     run_log([godot_exe] + args)
+
+
+def list_startswith(a: Sequence[T], b: Sequence[Ty]) -> bool:
+    if a and b:
+        a1, *arest = a
+        b1, *brest = b
+        return a1 == b1 and list_startswith(arest, brest)
+    return True
+
+
+def get_path_case_insensitive(stem: Path, target: Path) -> Path:
+    def recurse(target: Path) -> Path | None:
+        if target == stem:
+            return target
+        if target.exists():
+            return target
+        parent = recurse(target.parent)
+        if parent:
+            files = {p.name.lower(): p for p in parent.glob("*")}
+            return files.get(target.name.lower())
+        return None
+
+    if os.name == "nt":
+        return target
+
+    if not list_startswith(stem.parts, target.parts):
+        raise ValueError("Invalid argument: stem is not a prefix of path")
+
+    if not stem.exists():
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(target))
+
+    file = recurse(target)
+    if not file:
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(target))
+    return file

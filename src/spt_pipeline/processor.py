@@ -21,7 +21,7 @@ from spt_pipeline.dsl import (
     GodotRun,
     Track2GLTF,
 )
-from spt_pipeline.utils import RESOURCE_DIR, run_blender, run_godot
+from spt_pipeline.utils import RESOURCE_DIR, run_blender, run_godot, get_path_case_insensitive
 
 logger = logging.getLogger(__name__)
 
@@ -135,8 +135,9 @@ class PipelineProcessor(AbstractContextManager):
     def _(self, action: GetFiles):
         logger.debug(f"{action} p={self.path}")
         match = self.format(action.match)
-        directory = self.format(action.directory)
-        files = list({p.parent for p in Path(directory).rglob(match, case_sensitive=False)})
+        directory = Path(self.format(action.directory))
+        directory = get_path_case_insensitive(self.source, directory)
+        files = list({p.parent for p in directory.rglob(match, case_sensitive=False)})
         if action.required and not files:
             raise FileNotFoundError(f"No files found in {directory}")
         elif not files:
