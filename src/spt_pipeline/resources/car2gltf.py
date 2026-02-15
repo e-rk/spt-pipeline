@@ -17,8 +17,8 @@ try:
     parser.add_argument("-o", "--output")
     args = parser.parse_args(argv[1:])
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.preferences.addon_enable(module="io_nfs4_import")
-    # bpy.ops.preferences.addon_enable(module="bl_ext.user_default.speedtools")
+    # bpy.ops.preferences.addon_enable(module="io_nfs4_import")
+    bpy.ops.preferences.addon_enable(module="bl_ext.user_default.speedtools")
     bpy.ops.preferences.addon_enable(module="io_scene_gltf2")
     bpy.ops.import_scene.nfs4car(
         directory=args.input,
