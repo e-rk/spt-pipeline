@@ -6,6 +6,7 @@
 
 import argparse
 import sys
+import traceback
 from itertools import dropwhile
 
 import bpy
@@ -15,8 +16,8 @@ try:
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input")
     parser.add_argument("-o", "--output")
-    parser.add_argument("-n", "--night", type=bool, default=False)
-    parser.add_argument("-w", "--weather", type=bool, default=False)
+    parser.add_argument("-n", "--night", action="store_true")
+    parser.add_argument("-w", "--weather", action="store_true")
     args = parser.parse_args(argv[1:])
     bpy.ops.wm.read_factory_settings(use_empty=True)
     # bpy.ops.preferences.addon_enable(module="io_nfs4_import")
@@ -43,5 +44,6 @@ try:
         export_unused_images=True,
         export_apply=True,
     )
-except:
+except BaseException:
+    traceback.print_exc()
     exit(1)

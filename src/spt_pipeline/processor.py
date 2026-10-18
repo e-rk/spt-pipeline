@@ -101,6 +101,7 @@ class PipelineProcessor(AbstractContextManager):
             logger.info(f"Successfuly converted {self.path}")
         else:
             logger.error(f"Failed to convert {self.path}")
+        return self.path
 
     @run_action.register
     def _(self, action: Car2GLTF):
