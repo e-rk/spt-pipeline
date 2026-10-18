@@ -11,7 +11,14 @@ from typing import Self, Union
 
 from dataclass_wizard import JSONWizard
 
-DslTypes = Union["GetFiles", "Track2GLTF", "Car2GLTF", "GodotPostprocess", "GodotRun"]
+DslTypes = Union[
+    "GetFiles",
+    "Track2GLTF",
+    "Car2GLTF",
+    "FshUnpack",
+    "GodotPostprocess",
+    "GodotRun",
+]
 
 
 @dataclass
@@ -33,6 +40,12 @@ class Track2GLTF:
 @dataclass
 class Car2GLTF:
     destination: str = "{_temp}/{_filename}/{_filename.glb}"
+
+
+@dataclass
+class FshUnpack:
+    files: list[str]
+    destination: str
 
 
 @dataclass

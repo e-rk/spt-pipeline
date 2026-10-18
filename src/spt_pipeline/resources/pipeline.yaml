@@ -30,6 +30,9 @@ pipelines:
       actions:
           - action: Car2GLTF
             destination: "{_destination}/import/cars/{_filename}/{_filename}.glb"
+    - action: FshUnpack
+      files: ["{_source}/Data/GAMEART/SFX.FSH"]
+      destination: "{_destination}/import/textures/sfx"
     - action: GodotRun
       workdir: "{_destination}"
       args: ["--import"]

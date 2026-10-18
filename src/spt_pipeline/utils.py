@@ -21,12 +21,14 @@ SPEEDTOOLS_PATH = "speedtools-{speedtools}.zip"
 
 if os.name == "nt":
     GODOT_EXE = "Godot_v{godot}-stable_win64.exe"
+    SPEEDTOOL_EXE = "speedtool-{speedtools}.exe"
     BLENDER_PATH = (
         Path("C:/") / "Program Files" / "Blender Foundation" / "Blender 5.0" / "blender.exe"
     )
     FFMPEG_PATH = Path()
 else:
     GODOT_EXE = "Godot_v{godot}-stable_linux.x86_64"
+    SPEEDTOOL_EXE = "speedtool-{speedtools}"
     BLENDER_PATH = Path("blender")
     FFMPEG_PATH = Path("ffmpeg")
 
@@ -66,6 +68,7 @@ def format_paths(manifest: dict[str, str]) -> dict[str, Path]:
         "godot": Path(GODOT_EXE.format(**manifest)),
         "blender": BLENDER_PATH,
         "speedtools": Path("bundle") / SPEEDTOOLS_PATH.format(**manifest),
+        "speedtool": Path("bundle") / SPEEDTOOL_EXE.format(**manifest),
         "ffmpeg": ffmpeg_path,
     }
 
@@ -120,6 +123,10 @@ def run_blender(args: list, paths: dict[str, Path]):
     new_env = {"PATH": new_path}
     blender_exe = paths["blender"]
     run_log([blender_exe] + args, env=new_env)
+
+
+def run_speedtool(args: list, paths: dict[str, Path]) -> None:
+    run_log([paths["speedtool"]] + args)
 
 
 def run_godot(args: list, paths: dict[str, Path]):

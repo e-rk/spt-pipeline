@@ -20,8 +20,15 @@ from spt_pipeline.dsl import (
     GodotPostprocess,
     GodotRun,
     Track2GLTF,
+    FshUnpack,
 )
-from spt_pipeline.utils import RESOURCE_DIR, run_blender, run_godot, get_path_case_insensitive
+from spt_pipeline.utils import (
+    RESOURCE_DIR,
+    get_path_case_insensitive,
+    run_blender,
+    run_godot,
+    run_speedtool,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +131,20 @@ class PipelineProcessor(AbstractContextManager):
             logger.info(f"Successfuly converted {self.path}")
         else:
             logger.error(f"Failed to convert {self.path}")
+
+    @run_action.register
+    def _(self, action: FshUnpack):
+        logger.debug(action)
+        destination = self.format_path(action.destination)
+        files = [
+            get_path_case_insensitive(self.source, self.format_path(file)) for file in action.files
+        ]
+        logger.info(f"Unpacking {', '.join(map(str, files))} into {destination}")
+        try:
+            run_speedtool(["unpack", "--output", destination, *files], self.paths)
+            logger.info(f"Successfuly unpacked into {destination}")
+        except subprocess.CalledProcessError:
+            logger.error(f"Failed to unpack into {destination}")
 
     @run_action.register
     def _(self, action: Foreach):
