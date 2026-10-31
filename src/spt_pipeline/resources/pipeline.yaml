@@ -33,6 +33,9 @@ pipelines:
     - action: FshUnpack
       files: ["{_source}/Data/GAMEART/SFX.FSH"]
       destination: "{_destination}/import/textures/sfx"
+    - action: FshUnpack
+      files: ["{_source}/Data/GAMEART/PLATE.FSH"]
+      destination: "{_destination}/import/textures/plate"
     - action: GodotRun
       workdir: "{_destination}"
       args: ["--import"]
