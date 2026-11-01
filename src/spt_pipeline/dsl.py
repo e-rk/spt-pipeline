@@ -4,21 +4,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Self, Union
+from typing import Union
 
 from dataclass_wizard import JSONWizard
-
-DslTypes = Union[
-    "GetFiles",
-    "Track2GLTF",
-    "Car2GLTF",
-    "FshUnpack",
-    "GodotPostprocess",
-    "GodotRun",
-]
 
 
 @dataclass
@@ -59,9 +48,19 @@ class GodotRun:
     args: list[str]
 
 
+DslTypes = Union[
+    GetFiles,
+    Track2GLTF,
+    Car2GLTF,
+    FshUnpack,
+    GodotPostprocess,
+    GodotRun,
+]
+
+
 @dataclass
 class Foreach:
-    actions: list[DslTypes | Self]
+    actions: list[Union[DslTypes, "Foreach"]]
 
 
 @dataclass
@@ -71,4 +70,4 @@ class Root(JSONWizard):
         auto_assign_tags = True
 
     # pipelines: list[Pipeline]
-    pipelines: list[DslTypes | Foreach]
+    pipelines: list[Union[DslTypes, Foreach]]
