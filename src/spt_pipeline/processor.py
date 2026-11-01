@@ -5,6 +5,7 @@
 #
 
 import logging
+import multiprocessing
 import os
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
@@ -40,7 +41,7 @@ class PipelineProcessor(AbstractContextManager):
         self.destination = destination
         self.path = path
         self.paths: dict[str, Path] = paths
-        max_workers = 1 if sys.platform == "win32" else 6
+        max_workers = multiprocessing.cpu_count()
         self.executor = executor if executor else ThreadPoolExecutor(max_workers=max_workers)
 
     def __enter__(self):
