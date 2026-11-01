@@ -21,11 +21,11 @@ SPEEDTOOLS_PATH = "speedtools-{speedtools}.zip"
 
 if os.name == "nt":
     GODOT_EXE = "Godot_v{godot}-stable_win64.exe"
-    SPEEDTOOL_EXE = "speedtool-{speedtools}.exe"
+    SPEEDTOOL_EXE = "speedtool.exe"
     FFMPEG_PATH = Path()
 else:
     GODOT_EXE = "Godot_v{godot}-stable_linux.x86_64"
-    SPEEDTOOL_EXE = "speedtool-{speedtools}"
+    SPEEDTOOL_EXE = "speedtool"
     FFMPEG_PATH = Path("ffmpeg")
 
 DEFAULT_MANIFEST = {
