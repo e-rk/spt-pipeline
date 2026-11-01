@@ -6,9 +6,18 @@
 
 import argparse
 import sys
+import traceback
 from itertools import dropwhile
 
+import addon_utils
 import bpy
+
+
+def enable_addon(module: str) -> None:
+    _, loaded = addon_utils.check(module)
+    if not loaded:
+        bpy.ops.preferences.addon_enable(module=module)
+
 
 try:
     argv = list(dropwhile(lambda x: x != "--", sys.argv))
@@ -16,10 +25,9 @@ try:
     parser.add_argument("-i", "--input")
     parser.add_argument("-o", "--output")
     args = parser.parse_args(argv[1:])
-    bpy.ops.wm.read_factory_settings(use_empty=True)
-    # bpy.ops.preferences.addon_enable(module="io_nfs4_import")
-    bpy.ops.preferences.addon_enable(module="bl_ext.user_default.speedtools")
-    bpy.ops.preferences.addon_enable(module="io_scene_gltf2")
+    bpy.ops.wm.read_homefile(use_empty=True, use_factory_startup=True)
+    enable_addon("bl_ext.user_default.speedtools")
+    enable_addon("io_scene_gltf2")
     bpy.ops.import_scene.nfs4car(
         directory=args.input,
         import_lights=True,
@@ -33,5 +41,6 @@ try:
         export_lights=True,
         export_cameras=True,
     )
-except:
+except BaseException:
+    traceback.print_exc()
     exit(1)
