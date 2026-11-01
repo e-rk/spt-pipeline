@@ -75,8 +75,6 @@ def format_paths(manifest: dict[str, str]) -> dict[str, Path]:
         )
 
     return {
-        # Godot comes with the bundle in the working directory. A bare file name
-        # would be looked up in PATH on Linux, and GodotRun changes directory.
         "godot": Path.cwd() / GODOT_EXE.format(**manifest),
         "blender": blender_path(manifest["blender"]),
         "speedtools": Path("bundle") / SPEEDTOOLS_PATH.format(**manifest),
