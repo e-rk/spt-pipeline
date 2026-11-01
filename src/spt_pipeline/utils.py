@@ -22,14 +22,10 @@ SPEEDTOOLS_PATH = "speedtools-{speedtools}.zip"
 if os.name == "nt":
     GODOT_EXE = "Godot_v{godot}-stable_win64.exe"
     SPEEDTOOL_EXE = "speedtool-{speedtools}.exe"
-    BLENDER_PATH = (
-        Path("C:/") / "Program Files" / "Blender Foundation" / "Blender 5.0" / "blender.exe"
-    )
     FFMPEG_PATH = Path()
 else:
     GODOT_EXE = "Godot_v{godot}-stable_linux.x86_64"
     SPEEDTOOL_EXE = "speedtool-{speedtools}"
-    BLENDER_PATH = Path("blender")
     FFMPEG_PATH = Path("ffmpeg")
 
 DEFAULT_MANIFEST = {
@@ -54,6 +50,20 @@ def run_process(args: list, env={}) -> subprocess.CompletedProcess[bytes]:
     return subprocess.run(args, check=True, capture_output=True, env=run_env)
 
 
+def blender_path(version: str) -> Path:
+    """Default location of the Blender release from the manifest."""
+    if os.name == "nt":
+        series = ".".join(version.split(".")[:2])
+        return (
+            Path("C:/")
+            / "Program Files"
+            / "Blender Foundation"
+            / f"Blender {series}"
+            / "blender.exe"
+        )
+    return Path("blender")
+
+
 def format_paths(manifest: dict[str, str]) -> dict[str, Path]:
     ffmpeg_path = Path("ffmpeg")
     if os.name == "nt":
@@ -66,7 +76,7 @@ def format_paths(manifest: dict[str, str]) -> dict[str, Path]:
 
     return {
         "godot": Path(GODOT_EXE.format(**manifest)),
-        "blender": BLENDER_PATH,
+        "blender": blender_path(manifest["blender"]),
         "speedtools": Path("bundle") / SPEEDTOOLS_PATH.format(**manifest),
         "speedtool": Path("bundle") / SPEEDTOOL_EXE.format(**manifest),
         "ffmpeg": ffmpeg_path,

@@ -73,8 +73,8 @@ def install_addon(blender: Path, addon_path: Path):
         raise
 
 
-def install_blender():
-    run_winget(id="BlenderFoundation.Blender", version="5.0.1")
+def install_blender(version: str):
+    run_winget(id="BlenderFoundation.Blender", version=version)
 
 
 def main(
@@ -85,11 +85,10 @@ def main(
 ) -> None:
     logger.info("Installation started")
     manifest = get_manifest()
-    paths = format_paths(manifest)
     destination = Path(".")
     try:
         if blender_install:
-            install_blender()
+            install_blender(version=manifest["blender"])
 
         install_addon(blender=paths["blender"], addon_path=paths["speedtools"])
 
