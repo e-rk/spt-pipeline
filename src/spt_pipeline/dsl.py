@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-from dataclasses import dataclass
+from __future__ import annotations
+
+from dataclasses import dataclass, field
 from typing import Union
 
 from dataclass_wizard import JSONWizard
@@ -17,6 +19,7 @@ class GetFiles:
     dir_only: bool = False
     required: bool = False
     recursive: bool = False
+    exclude: list[str] = field(default_factory=list)
 
 
 @dataclass

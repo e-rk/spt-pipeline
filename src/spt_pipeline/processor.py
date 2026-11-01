@@ -10,7 +10,7 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import AbstractContextManager, chdir, suppress
 from functools import singledispatchmethod
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import sys
 
 from spt_pipeline.dsl import (
@@ -72,6 +72,12 @@ class PipelineProcessor(AbstractContextManager):
 
     def format_path(self, string) -> Path:
         return Path(self.format(string))
+
+    @staticmethod
+    def excluded(path: Path, directory: Path, patterns: list[str]) -> bool:
+        # Game files are not consistently cased, so match case-insensitively
+        relative = PurePosixPath(path.relative_to(directory).as_posix().lower())
+        return any(relative.match(pattern.lower()) for pattern in patterns)
 
     def spawn_blender(self, args):
         try:
@@ -183,6 +189,7 @@ class PipelineProcessor(AbstractContextManager):
         directory = Path(self.format(action.directory))
         directory = get_path_case_insensitive(self.source, directory)
         files = list({p.parent for p in directory.rglob(match, case_sensitive=False)})
+        files = [p for p in files if not self.excluded(p, directory, action.exclude)]
         if action.required and not files:
             raise FileNotFoundError(f"No files found in {directory}")
         elif not files:

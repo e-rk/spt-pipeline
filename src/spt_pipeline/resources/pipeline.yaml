@@ -26,6 +26,7 @@ pipelines:
       dir_only: True
       recursive: True
       required: True
+      exclude: ["traffic/choppers/*"]
     - action: Foreach
       actions:
           - action: Car2GLTF
