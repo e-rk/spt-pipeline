@@ -50,6 +50,7 @@ try:
         export_active_vertex_color_when_no_material=False,
         export_unused_images=True,
         export_apply=True,
+        export_force_sampling=False,
     )
 except BaseException:
     traceback.print_exc()
