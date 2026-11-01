@@ -19,6 +19,7 @@ from spt_pipeline.dsl import (
     GetFiles,
     GodotPostprocess,
     GodotRun,
+    Heli2GLTF,
     Track2GLTF,
     FshUnpack,
 )
@@ -121,6 +122,28 @@ class PipelineProcessor(AbstractContextManager):
             "--background",
             "--python",
             RESOURCE_DIR / "car2gltf.py",
+            "--",
+            "--input",
+            self.path,
+            "--output",
+            destination,
+        ]
+        if self.spawn_blender(args):
+            logger.info(f"Successfuly converted {self.path}")
+        else:
+            logger.error(f"Failed to convert {self.path}")
+
+    @run_action.register
+    def _(self, action: Heli2GLTF):
+        logger.debug(action)
+        destination = self.format_path(action.destination)
+        logger.info(f"Converting helicopter {self.path} into {destination}")
+        with suppress(FileExistsError):
+            os.makedirs(destination.parent)
+        args = [
+            "--background",
+            "--python",
+            RESOURCE_DIR / "heli2gltf.py",
             "--",
             "--input",
             self.path,

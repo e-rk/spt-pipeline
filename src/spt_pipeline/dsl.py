@@ -32,6 +32,11 @@ class Car2GLTF:
 
 
 @dataclass
+class Heli2GLTF:
+    destination: str = "{_temp}/{_filename}/{_filename.glb}"
+
+
+@dataclass
 class FshUnpack:
     files: list[str]
     destination: str
@@ -52,6 +57,7 @@ DslTypes = Union[
     GetFiles,
     Track2GLTF,
     Car2GLTF,
+    Heli2GLTF,
     FshUnpack,
     GodotPostprocess,
     GodotRun,
