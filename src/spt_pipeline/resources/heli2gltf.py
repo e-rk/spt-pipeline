@@ -25,7 +25,7 @@ try:
     parser.add_argument("-i", "--input")
     parser.add_argument("-o", "--output")
     args = parser.parse_args(argv[1:])
-    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.ops.wm.read_homefile(use_empty=True, use_factory_startup=True)
     enable_addon("bl_ext.user_default.speedtools")
     enable_addon("io_scene_gltf2")
     bpy.ops.import_scene.nfs4heli(
