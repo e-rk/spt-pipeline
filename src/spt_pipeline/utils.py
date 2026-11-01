@@ -75,7 +75,7 @@ def format_paths(manifest: dict[str, str]) -> dict[str, Path]:
         )
 
     return {
-        "godot": Path(GODOT_EXE.format(**manifest)),
+        "godot": Path.cwd() / GODOT_EXE.format(**manifest),
         "blender": blender_path(manifest["blender"]),
         "speedtools": Path("bundle") / SPEEDTOOLS_PATH.format(**manifest),
         "speedtool": Path("bundle") / SPEEDTOOL_EXE.format(**manifest),
